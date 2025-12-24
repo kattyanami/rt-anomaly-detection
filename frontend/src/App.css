@@ -1,42 +1,248 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app-root {
+  min-height: 100vh;
+  background: #0b1020;
+  background: radial-gradient(circle at top, #1a2340 0, #050711 45%, #050509 100%);
+  color: #f5f5f7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app-header {
+  padding: 1.5rem 3rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.app-title-block {
+  max-width: 720px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3ff;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(129, 140, 248, 0.2),
+    rgba(56, 189, 248, 0.15)
+  );
 }
 
-.card {
-  padding: 2em;
+.app-title {
+  font-size: 1.65rem;
+  font-weight: 600;
+  margin: 0;
 }
 
-.read-the-docs {
-  color: #888;
+.app-subtitle {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  color: rgba(235, 238, 255, 0.75);
+}
+
+.app-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.meta-pill {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: #e5e7eb;
+}
+
+/* Main */
+
+.app-main {
+  padding: 1.5rem 3rem 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* KPI cards */
+
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.kpi-card {
+  background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+  border-radius: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.7);
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  color: rgba(209, 213, 219, 0.8);
+  margin-bottom: 0.45rem;
+}
+
+.kpi-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.kpi-value-danger {
+  color: #fb7185;
+}
+
+.kpi-footer {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 0.25rem;
+}
+
+/* Table */
+
+.table-section {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 1rem;
+  border: 1px solid rgba(100, 116, 139, 0.65);
+  padding: 1.2rem 1.4rem 1.4rem;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.table-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.table-subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: rgba(156, 163, 175, 0.95);
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #e5e7eb;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.table-wrapper {
+  border-radius: 0.7rem;
+  overflow: auto;
+  max-height: 400px;
+}
+
+.anomaly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.anomaly-table thead {
+  background: rgba(15, 23, 42, 0.95);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.anomaly-table th,
+.anomaly-table td {
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.anomaly-table th {
+  font-weight: 500;
+  font-size: 0.78rem;
+  color: rgba(148, 163, 184, 0.95);
+  border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+}
+
+.anomaly-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.anomaly-table tbody tr:nth-child(odd) {
+  background: rgba(17, 24, 39, 0.95);
+}
+
+.anomaly-table tbody tr:hover {
+  background: rgba(30, 64, 175, 0.3);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Risk pills */
+
+.risk-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.risk-high {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.risk-medium {
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.45);
+}
+
+/* Footer */
+
+.app-footer {
+  padding: 0.8rem 3rem 1.1rem;
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.9);
+  border-top: 1px solid rgba(15, 23, 42, 0.95);
 }

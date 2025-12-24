@@ -305,7 +305,7 @@ resource "aws_sagemaker_model" "anomaly_model" {
   execution_role_arn = aws_iam_role.sagemaker_role.arn
 
   primary_container {
-    image          = "683313688378.dkr.ecr.${var.aws_region}.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3"
+    image          = "683313688378.dkr.ecr.eu-west-2.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3"
     mode           = "SingleModel"
     model_data_url = "s3://${aws_s3_bucket.models.bucket}/model/model.tar.gz"
   }
