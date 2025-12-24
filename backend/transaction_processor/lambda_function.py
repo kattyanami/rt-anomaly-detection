@@ -1,62 +1,81 @@
 import json
-import boto3
 import os
-from decimal import Decimal  # <-- ADD THIS
+import boto3
+from decimal import Decimal
 
-s3 = boto3.client("s3")
-dynamodb = boto3.resource("dynamodb")
+s3 = boto3.client('s3')
+dynamodb = boto3.resource('dynamodb')
+sagemaker_runtime = boto3.client('sagemaker-runtime')
 
-RAW_BUCKET = os.environ.get("RAW_BUCKET")
-ANOMALIES_TABLE_NAME = os.environ.get("ANOMALIES_TABLE_NAME")
-
-anomalies_table = dynamodb.Table(ANOMALIES_TABLE_NAME)
+RAW_BUCKET = os.environ['RAW_BUCKET']
+ANOMALIES_TABLE_NAME = os.environ['ANOMALIES_TABLE_NAME']
+SAGEMAKER_ENDPOINT = os.environ.get('SAGEMAKER_ENDPOINT_NAME', '')
 
 def lambda_handler(event, context):
-    print("Event received:", json.dumps(event))
-
-    for record in event.get("Records", []):
-        s3_bucket = record["s3"]["bucket"]["name"]
-        s3_key = record["s3"]["object"]["key"]
-        print(f"Processing file from s3://{s3_bucket}/{s3_key}")
-
-        if s3_bucket != RAW_BUCKET:
-            print(f"Skipping bucket {s3_bucket}, expected {RAW_BUCKET}")
-            continue
-
-        obj = s3.get_object(Bucket=s3_bucket, Key=s3_key)
-        body = obj["Body"].read().decode("utf-8")
-
-        try:
-            transactions = json.loads(body)
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error for {s3_key}: {e}")
-            continue
-
-        if not isinstance(transactions, list):
-            print(f"Unexpected JSON format in {s3_key}: expected list of transactions")
-            continue
-
-        print(f"Loaded {len(transactions)} transactions from {s3_key}")
-
+    """
+    Triggered by S3 ObjectCreated event.
+    Reads transaction batch, calls SageMaker for anomaly score, writes to DynamoDB.
+    """
+    table = dynamodb.Table(ANOMALIES_TABLE_NAME)
+    
+    for record in event['Records']:
+        bucket = record['s3']['bucket']['name']
+        key = record['s3']['object']['key']
+        
+        print(f"Processing s3://{bucket}/{key}")
+        
+        # Download and parse JSON
+        obj = s3.get_object(Bucket=bucket, Key=key)
+        transactions = json.loads(obj['Body'].read().decode('utf-8'))
+        
         for txn in transactions:
-            amount = txn.get("amount", 0)
-            is_anomaly = amount > 10000  # simple rule
-
+            # Extract features for model
+            features = [
+                float(txn.get('amount', 0)),
+                1 if txn.get('country') != 'GB' else 0,  # is_foreign
+                1 if txn.get('device_type') == 'web' else 0,  # is_web
+            ]
+            
+            # Call SageMaker endpoint if configured
+            anomaly_score = -1.0  # default
+            if SAGEMAKER_ENDPOINT:
+                try:
+                    response = sagemaker_runtime.invoke_endpoint(
+                        EndpointName=SAGEMAKER_ENDPOINT,
+                        ContentType='application/json',
+                        Body=json.dumps({'instances': [features]})
+                    )
+                    result = json.loads(response['Body'].read().decode('utf-8'))
+                    # Isolation Forest returns -1 for anomalies, 1 for normal
+                    anomaly_score = float(result['predictions'][0])
+                except Exception as e:
+                    print(f"SageMaker invocation failed: {e}")
+                    anomaly_score = -1.0  # treat as anomaly if model fails
+            
+            # Simple rule-based flagging (fallback or combined with model)
+            is_anomaly = (
+                float(txn.get('amount', 0)) > 10000 or
+                anomaly_score == -1.0
+            )
+            
             if is_anomaly:
-                print(f"Flagging anomaly: {txn}")
-                anomalies_table.put_item(
-                    Item={
-                        "transaction_id": txn["transaction_id"],
-                        "user_id": txn.get("user_id", ""),
-                        # convert to Decimal here:
-                        "amount": Decimal(str(amount)),
-                        "currency": txn.get("currency", ""),
-                        "merchant_category": txn.get("merchant_category", ""),
-                        "country": txn.get("country", ""),
-                        "device_type": txn.get("device_type", ""),
-                        "timestamp": txn.get("timestamp", ""),
-                        "reason": "amount_gt_10000_rule",
-                    }
-                )
-
-    return {"statusCode": 200, "body": "Processed S3 event"}
+                item = {
+                    'transaction_id': txn['transaction_id'],
+                    'user_id': txn['user_id'],
+                    'amount': Decimal(str(txn['amount'])),
+                    'currency': txn.get('currency', 'GBP'),
+                    'merchant_category': txn.get('merchant_category', 'unknown'),
+                    'country': txn.get('country', 'unknown'),
+                    'device_type': txn.get('device_type', 'unknown'),
+                    'timestamp': txn['timestamp'],
+                    'anomaly_score': Decimal(str(anomaly_score)),
+                    'flagged_reason': 'high_amount_or_model'
+                }
+                
+                table.put_item(Item=item)
+                print(f"Flagged anomaly: {txn['transaction_id']}")
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Processing complete')
+    }

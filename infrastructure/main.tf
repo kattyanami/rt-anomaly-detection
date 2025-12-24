@@ -225,8 +225,9 @@ resource "aws_lambda_function" "transaction_processor" {
 
   environment {
     variables = {
-      RAW_BUCKET           = aws_s3_bucket.raw_transactions.bucket
-      ANOMALIES_TABLE_NAME = aws_dynamodb_table.anomalies.name
+      RAW_BUCKET              = aws_s3_bucket.raw_transactions.bucket
+      ANOMALIES_TABLE_NAME    = aws_dynamodb_table.anomalies.name
+      SAGEMAKER_ENDPOINT_NAME = aws_sagemaker_endpoint.anomaly_endpoint.name
     }
   }
 
