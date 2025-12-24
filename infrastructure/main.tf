@@ -159,7 +159,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Inline policy: S3 + DynamoDB access
+# Inline policy: S3 + DynamoDB access+sagemaker_endpoint_name
 resource "aws_iam_role_policy" "lambda_data_access" {
   name = "${var.project_name}-lambda-data-access"
   role = aws_iam_role.lambda_role.id
@@ -191,6 +191,13 @@ resource "aws_iam_role_policy" "lambda_data_access" {
           "dynamodb:Scan"
         ]
         Resource = aws_dynamodb_table.anomalies.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sagemaker:InvokeEndpoint"
+        ]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:*:endpoint/${var.project_name}-iforest-endpoint"
       }
     ]
   })

@@ -27,3 +27,8 @@ output "models_bucket" {
   value       = aws_s3_bucket.models.bucket
   description = "S3 bucket for ML models"
 }
+
+output "sagemaker_endpoint_name" {
+  value       = aws_sagemaker_endpoint.anomaly_endpoint.name
+  description = "SageMaker endpoint name for anomaly detection"
+}
