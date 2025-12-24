@@ -1,0 +1,140 @@
+name: Terraform Full Pipeline
+
+on:
+  # Manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  prechecks:
+    name: Pre-checks (fmt + validate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init (download providers)
+        run: terraform init -input=false
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    needs: prechecks
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan.out
+
+      - name: Show Plan
+        run: terraform show -no-color tfplan.out
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: infrastructure/tfplan.out
+
+  apply:
+    name: Apply
+    runs-on: ubuntu-latest
+    needs: plan
+    # Optional: protect with an environment for manual approval
+    # environment:
+    #   name: production
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve
+
+  post_apply:
+    name: Post-apply (outputs)
+    runs-on: ubuntu-latest
+    needs: apply
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Show Terraform Outputs
+        run: terraform output
